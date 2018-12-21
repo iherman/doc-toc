@@ -59,7 +59,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
      * 
      * @param {Event} e 
      */
-    function change_visibility(e) {
+    const change_visibility = (e) => {
         let className = e.target.className.split(' ');
         let newClassName = className.map( (c) => {
             switch (c) {
@@ -84,7 +84,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
         } else {
             return `${prefix.map((n) => n.toString()).join(".")}.${last.toString()}`
         }
-    }
+    };
 
     /**
      * The core of the procedure: goes through the immediate `<section>` children of the `current` layer (i.e., the top level
