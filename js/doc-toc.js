@@ -11,19 +11,17 @@ class DocToc extends HTMLElement {
         this._id_prefix = 'section';
         this._generate_counter = true; 
         this._max_depth = 0;
+        this._nav = undefined;
     }
 
     static get observedAttributes() { return ['role', 'prefix', 'suppress_counter', 'max_depth'] }
 
     connectedCallback() {
-        if (this.hasAttribute('role')) {
-            const values = this.getAttribute('role').split(' ');
-            if (!values.includes('doc-toc')) {
-                values.push('doc-toc')
-                this.setAttribute('role', values.join(" "));
-            } else {
-                this.setAttribute('role', 'doc-toc');
-            }
+        if (!this._nav) {
+            // a `nav` element is added as the top level element for the ToC
+            this._nav = document.createElement('nav');
+            this._nav.setAttribute('role','doc-toc');
+            this.append(this._nav);
         }
         if (this.hasAttribute('prefix')) {
             this._id_prefix = this.getAttribute('prefix')
@@ -35,11 +33,11 @@ class DocToc extends HTMLElement {
             const n = Number(this.getAttribute('max_depth'));
             this._max_depth = Number.isInteger(n) ? n : 0;
         }
-        getToc(this, this._generate_counter, this._id_prefix, this._max_depth)
+        getToc(this._nav, this._generate_counter, this._id_prefix, this._max_depth)
     }
 }
 
-customElements.define("doc-toc", DocToc, {extends: "nav"});
+customElements.define("doc-toc", DocToc);
 
 
 /**
