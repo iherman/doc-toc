@@ -55,5 +55,6 @@ A number of class attributes are added to the ToC entries that can be used for C
 
 - The ARIA `role` attribute of the `<nav>` element is set to `doc-toc`.
 - The class for each `<ul>` is set to  `toc toclevelX`, with 'X' set to 1, 2, ... depending on the depth of the hierarchy.
+- The numbering (if used) is always enclosed in a `<span>` element with the class set to `tocnumber`.
 
 The `css/doc-toc.css` provides some simple examples for customization.

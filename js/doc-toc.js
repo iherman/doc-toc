@@ -116,16 +116,22 @@ function getToc(target, generate_counter, id_prefix, max_depth) {
                 section.id = id;
             }
 
-            // Get the link text, and modify it
-            let text = '';
-            if (count) {
-                text = `${header_number}. ${header.textContent}`;
-                header.textContent = text;
-            } else {
-                text = header.textContent
-            }
+            // Get the link text
+            let text = header.textContent;
 
             const li = document.createElement('li');
+
+            // If the counter option is set, two things should happen: the number is used for a 'span' in the ToC entry, and
+            // the content of the header should change.
+            if (count) {
+                header.textContent = `${header_number}. ${text}`;
+                const span = document.createElement('span');
+                span.className = 'tocnumber';
+                span.textContent = `${header_number}.`; 
+                li.append(span);
+                text = ` ${text}`;
+            } 
+
             const a = document.createElement('a');
             a.setAttribute('href', `#${id}`);
             a.textContent = text;

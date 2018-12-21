@@ -1,0 +1,18 @@
+
+nav[role='doc-toc'] a {
+	text-decoration: none;
+}
+
+nav[role='doc-toc'] a:hover {
+	text-decoration: underline;
+	background: yellow;
+	color: red;
+}
+
+nav[role='doc-toc'] ul {
+	list-style-type: none;
+	margin-left: 1.5em;
+	padding-left: 0;
+}
+
+
