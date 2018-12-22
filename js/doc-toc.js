@@ -38,7 +38,10 @@ class DocToc extends HTMLElement {
         }
 
         // Generate the table of content structure into this element
-        getToc(this._nav, this._generate_counter, this._id_prefix, this._max_depth, this._dynamic);
+        // I am not sure it is necessary to make the main processing and event handler, but it is certainly more safe...
+        window.addEventListener('load', (e) => {
+            getToc(this._nav, this._generate_counter, this._id_prefix, this._max_depth, this._dynamic);
+        })
     }
 };
 customElements.define("doc-toc", DocToc);
