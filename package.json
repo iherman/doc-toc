@@ -1,0 +1,31 @@
+{
+  "name": "doc-toc",
+  "version": "1.0.0",
+  "description": "Table of Content (TOC) generation script",
+  "main": "js/doc-toc.js",
+  "keywords": [
+    "TOC",
+    "Custom Elements"
+  ],
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://iherman@github.com/iherman/doc-toc.git"
+  },
+  "author": "Ivan Herman",
+  "license": "W3C-20150513",
+  "bugs": {
+    "url": "https://github.com/iherman/doc-toc/issues"
+  },
+  "homepage": "https://github.com/iherman/doc-toc#readme",
+  "devDependencies": {
+    "eslint": "^5.11.1",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0"
+  }
+}

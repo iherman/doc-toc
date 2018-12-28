@@ -1,9 +1,10 @@
 /**
- * Customized built-in element, extending the `<nav>` element, for the generation of a table of content (ToC). The table of content
- * is collected from `<section>` elements that have a heading element (if there are several, the first one is taken). 
- * 
+ * Customized built-in element, extending the `<nav>` element, for the generation of a
+ * table of content (ToC). The table of content is collected from `<section>` elements
+ * that have a heading element (if there are several, the first one is taken).
+ *
  * See the separate README.md for details.
- * 
+ *
  */
 class DocToc extends HTMLElement {
     constructor() {
