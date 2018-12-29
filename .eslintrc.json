@@ -19,12 +19,18 @@
                 }
             }
         ],
+        "max-len" : [
+            "error",
+            {
+                "code" : 120
+            }
+        ],
         "no-console": "off",
         "camelcase": "off",
         "strict": "off",
         "no-undef": "error",
-        "env" {
-            "browser":true
+        "env" : {
+            "browser": "true"
         },
         "no-underscore-dangle": ["error", { "allowAfterThis": true }],
         "key-spacing": [
@@ -60,6 +66,7 @@
         "prefer-destructuring": "off",
         "consistent-return": "off",
         "no-eval": "error",
-        "no-implied-eval": "error"
+        "no-implied-eval": "error",
+        "no-else-return": "off"
     }
 }
