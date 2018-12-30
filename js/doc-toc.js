@@ -216,17 +216,12 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
                 section.id = id;
             }
 
-            // Get the link text
-            const text = header.textContent;
-
-            // if (count) {
-            //     span.className = 'tocnumber';
-            //     span.textContent = `${header_number}.`;
-            //     li.append(span);
-            //     header.textContent = `${header_number}. ${text}`;
-            //     text = ` ${text}`;
-            // }
-
+            // Get the link text; possibly modify the original with the counter value (if requested)
+            let text = header.textContent;
+            if (count) {
+                header.textContent = `${header_number}. ${text}`;
+                text = ` ${text}`;
+            }
 
             const toc_structure = {
                 href      : id,
@@ -248,8 +243,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
     if (body === undefined) return;
     const start = body.querySelector('main') || body;
     console.log(JSON.stringify(getTocFromSections(start, [], generate_counter), null, 4));
-    getTocObject(target, start, [], generate_counter);
-
+    // getTocObject(target, start, [], generate_counter);
 }
 
 
