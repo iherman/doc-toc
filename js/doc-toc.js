@@ -65,10 +65,9 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
      * @param {HTMLElement} current where to look for suitable sections
      * @param {Array} counters counters of the parent ToC entries, to be used as
      * counters for the sections and ToC entries
-     * @param {Boolean} count whether counters should be added to the ToC entries and the text
      * @returns {Array} array of ToC structures, to be converted into HTML
      */
-    const getTocObject = (toc_target, current, counters, count) => {
+    const getTocObject = (toc_target, current, counters) => {
         /** The list containing the toc entries (if any) */
         const ul = document.createElement('ul');
         ul.className = `toc toclevel${counters.length + 1}`;
@@ -121,7 +120,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
             // If the counter option is set, two things should happen: the number is used for a 'span'
             // in the ToC entry, and the content of the header in the `<section>` should change.
             const span = document.createElement('span');
-            if (count) {
+            if (generate_counter) {
                 span.className = 'tocnumber';
                 span.textContent = `${header_number}.`;
                 li.append(span);
@@ -137,7 +136,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
 
             // The recursive step is here: if necessary, the li element is extended to add a toc hierarchy
             // If there _is_ a hierarchy, then the dynamic features are added (if required)
-            if (getTocObject(li, section, counters.concat([num]), count) > 0 && dynamic) {
+            if (getTocObject(li, section, counters.concat([num])) > 0 && dynamic) {
                 span.className = section.hasAttribute('data-tochidden')
                     ? `${span.className} tochidden` : `${span.className} tocvisible`;
                 span.addEventListener('click', change_visibility);
@@ -178,9 +177,9 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
      * @param {HTMLElement} current where to look for suitable sections
      * @param {Array} counters counters of the parent ToC entries, to be used as
      *   counters for the sections and ToC entries
-     * @param {Boolean} count whether counters should be added to the ToC entries and the text
+     * @returns {Array} array of ToC structures
      */
-    const getTocFromSections = (current, counters, count) => {
+    const getTocFromSections = (current, counters) => {
         // See if we have reached the maximum depth; if so, no more toc
         if (max_depth > 0 && counters.length + 1 > max_depth) return [];
 
@@ -218,7 +217,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
 
             // Get the link text; possibly modify the original with the counter value (if requested)
             let text = header.textContent;
-            if (count) {
+            if (generate_counter) {
                 header.textContent = `${header_number}. ${text}`;
                 text = ` ${text}`;
             }
@@ -228,7 +227,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
                 name      : text,
                 counter   : header_number,
                 tochidden : section.hasAttribute('data-tochidden'),
-                children  : getTocFromSections(section, counters.concat([num]), count)
+                children  : getTocFromSections(section, counters.concat([num]))
             };
 
             // Add the new entry to the list of ToC links.
@@ -238,12 +237,42 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
         return toc;
     };
 
-    // The top level is either the body element or, if it exists, the main element.
+    /**
+     * The core of the procedure: goes through the immediate `<section>` children of the `current` layer
+     * (i.e., the top level `<body>` or `<main>`), gets the header, gets or, possibly, sets the `id`
+     * attribute, and generate the corresponding `<li><span>number</span> <a href="#id">header</a></li>`.
+     * All these are collected into a `<ul>` appended to the `toc_target`.
+     *
+     * There is a recursive call after the creation of the `<li>` to see if the current `<section>`
+     * has subsections to expand the current `<li>` if necessary.
+     *
+     * @param {HTMLElement} toc_target where to put the generated TOC
+     * @returns {Array} array of ToC structures, to be converted into HTML
+     */
+    const generate_toc = (toc_target, toc_structure) => {
+        if (toc_structure.length === 0) return;
+        const ul = document.createElement('ul');
+        toc_target.append(ul);
+        toc_structure.forEach((one_toc_level) => {
+            // This is the rough structure, to be greatly refined!!!!!
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.setAttribute('href', one_toc_level.href);
+            a.textContent = one_toc_level.name;
+            li.append(a);
+            generate_toc(li, one_toc_level.children);
+            ul.append(li);
+        });
+    };
+
+    // The top level to look for the headers is either the body element or, if it exists, the (first) main element.
     const body = document.querySelector('body');
     if (body === undefined) return;
     const start = body.querySelector('main') || body;
-    console.log(JSON.stringify(getTocFromSections(start, [], generate_counter), null, 4));
-    // getTocObject(target, start, [], generate_counter);
+
+    const full_toc = getTocFromSections(start, []);
+    console.log(JSON.stringify(full_toc, null, 4));
+    generate_toc(target, full_toc);
 }
 
 
@@ -251,7 +280,7 @@ class DocToc extends HTMLElement {
     constructor() {
         super();
         this._id_prefix = 'section';
-        this._generate_counter = true;
+        this._generate_counter = false;
         this._max_depth = 0;
         this._dynamic = false;
         this._nav = undefined;
