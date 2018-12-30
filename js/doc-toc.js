@@ -158,11 +158,98 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
         return toc.length;
     };
 
+    /**
+     * Get hold of the data structure that will be used for the creation of the TOC; this is the case
+     * when the structure is extracted from `<section>` elements.
+     *
+     * The core of the procedure: goes through the immediate `<section>` children of the `current` layer
+     * (i.e., the top level `<body>` or `<main>`), gets the header, gets or, possibly, sets the `id`
+     * attribute, and generate data structure of the form:
+     *
+     * * `href`      : the `@id` value of the target, to be used for the link
+     * * `name`      : the text of the header, to be used in as the link text in the toc
+     * * `counter`   : the counter value for the TOC, to be used, if requested, in the TOC
+     * * `tochidden` : whether the `@data-tochidden` attribute is set for the header
+     * * `children`  : the possible children structures as an array. This is a recursive call.
+     *
+     * The `@id` attribute is added to the section element itself (if needed) and the text
+     * is modified with the counter number, if requested.
+     *
+     * @param {HTMLElement} current where to look for suitable sections
+     * @param {Array} counters counters of the parent ToC entries, to be used as
+     *   counters for the sections and ToC entries
+     * @param {Boolean} count whether counters should be added to the ToC entries and the text
+     */
+    const getTocFromSections = (current, counters, count) => {
+        // See if we have reached the maximum depth; if so, no more toc
+        if (max_depth > 0 && counters.length + 1 > max_depth) return [];
+
+        /** 'num' is the number variable for the toc entries (on one level); added to the values in `current` */
+        let num = 0;
+
+        /**
+         * The array of structures for the TOC entries
+         */
+        const toc = [];
+
+        // note the selector that takes care of the notoc attribute!
+        current.querySelectorAll('section:not([data-notoc])').forEach((section) => {
+            // Only a direct child counts...
+            if (section.parentElement !== current) return;
+
+            // getting the first header-like element in the section
+            const header = section.querySelector('h1, h2, h3, h4, h5, h6');
+
+            // if there is no such header, or it is not a direct child, then break the cycle,
+            // i.e., this section is ignored for the ToC
+            if (header === undefined || header.parentElement !== section) return;
+
+            // Calculate the full counter value for numbering
+            num += 1;
+            const header_number = getHeaderNumber(counters, num);
+
+            // Get the 'id' for the section
+            let id = section.id;
+            // if no id is set on the section, add one
+            if (id === '') {
+                id = `${id_prefix}_${header_number}`;
+                section.id = id;
+            }
+
+            // Get the link text
+            const text = header.textContent;
+
+            // if (count) {
+            //     span.className = 'tocnumber';
+            //     span.textContent = `${header_number}.`;
+            //     li.append(span);
+            //     header.textContent = `${header_number}. ${text}`;
+            //     text = ` ${text}`;
+            // }
+
+
+            const toc_structure = {
+                href      : id,
+                name      : text,
+                counter   : header_number,
+                tochidden : section.hasAttribute('data-tochidden'),
+                children  : getTocFromSections(section, counters.concat([num]), count)
+            };
+
+            // Add the new entry to the list of ToC links.
+            toc.push(toc_structure);
+        });
+
+        return toc;
+    };
+
     // The top level is either the body element or, if it exists, the main element.
     const body = document.querySelector('body');
     if (body === undefined) return;
     const start = body.querySelector('main') || body;
+    console.log(JSON.stringify(getTocFromSections(start, [], generate_counter), null, 4));
     getTocObject(target, start, [], generate_counter);
+
 }
 
 
