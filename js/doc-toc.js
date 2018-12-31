@@ -65,25 +65,40 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
      * @param {HTMLElement} current where to look for suitable sections
      * @param {Array} counters counters of the parent ToC entries, to be used as
      * counters for the sections and ToC entries
-     * @param {Boolean} count whether counters should be added to the ToC entries and the text
      * @returns {Array} array of ToC structures, to be converted into HTML
      */
-    const getTocObject = (toc_target, current, counters, count) => {
-        /** The list containing the toc entries (if any) */
-        const ul = document.createElement('ul');
-        ul.className = `toc toclevel${counters.length + 1}`;
 
+    /**
+     * Get hold of the data structure that will be used for the creation of the TOC; this is the case
+     * when the structure is extracted from `<section>` elements.
+     *
+     * The core of the procedure: goes through the immediate `<section>` children of the `current` layer
+     * (i.e., the top level `<body>` or `<main>`), gets the header, gets or, possibly, sets the `id`
+     * attribute, and generate data structure of the form:
+     *
+     * * `href`      : the `@id` value of the target, to be used for the link
+     * * `name`      : the text of the header, to be used in as the link text in the toc
+     * * `counter`   : the counter value for the TOC, to be used, if requested, in the TOC
+     * * `tochidden` : whether the `@data-tochidden` attribute is set for the header
+     * * `children`  : the possible children structures as an array. This is a recursive call.
+     *
+     * The `@id` attribute is added to the section element itself (if needed) and the text
+     * is modified with the counter number, if requested.
+     *
+     * @param {HTMLElement} current where to look for suitable sections
+     * @param {Array} counters counters of the parent ToC entries, to be used as
+     *   counters for the sections and ToC entries
+     * @returns {Array} array of ToC structures
+     */
+    const getTocFromSections = (current, counters) => {
         // See if we have reached the maximum depth; if so, no more toc
-        if (max_depth > 0 && counters.length + 1 > max_depth) return;
+        if (max_depth > 0 && counters.length + 1 > max_depth) return [];
 
         /** 'num' is the number variable for the toc entries (on one level); added to the values in `current` */
         let num = 0;
 
         /**
-         * The '<li>' elements for the toc entries are first collected
-         * and added to the '<ul>' element only when they are all collected.
-         * This means that no '<ul>' elements are added in case there is no valid toc entry, ie
-         * this array is empty at the end of the main cycle.
+         * The array of structures for the TOC entries
          */
         const toc = [];
 
@@ -93,7 +108,7 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
             if (section.parentElement !== current) return;
 
             // getting the first header-like element in the section
-            const header = section.querySelector('h1,h2,h3,h4,h5,h6');
+            const header = section.querySelector('h1, h2, h3, h4, h5, h6');
 
             // if there is no such header, or it is not a direct child, then break the cycle,
             // i.e., this section is ignored for the ToC
@@ -111,58 +126,83 @@ function getToc(target, generate_counter, id_prefix, max_depth, dynamic) {
                 section.id = id;
             }
 
-            // Get the link text
+            // Get the link text; possibly modify the original with the counter value (if requested)
             let text = header.textContent;
-
-            // Create the holder of links in the ToC
-            const li = document.createElement('li');
-            li.className = 'tocentry';
-
-            // If the counter option is set, two things should happen: the number is used for a 'span'
-            // in the ToC entry, and the content of the header in the `<section>` should change.
-            const span = document.createElement('span');
-            if (count) {
-                span.className = 'tocnumber';
-                span.textContent = `${header_number}.`;
-                li.append(span);
+            if (generate_counter) {
                 header.textContent = `${header_number}. ${text}`;
                 text = ` ${text}`;
             }
 
-            // The real link
-            const a = document.createElement('a');
-            a.setAttribute('href', `#${id}`);
-            a.textContent = text;
-            li.append(a);
-
-            // The recursive step is here: if necessary, the li element is extended to add a toc hierarchy
-            // If there _is_ a hierarchy, then the dynamic features are added (if required)
-            if (getTocObject(li, section, counters.concat([num]), count) > 0 && dynamic) {
-                span.className = section.hasAttribute('data-tochidden')
-                    ? `${span.className} tochidden` : `${span.className} tocvisible`;
-                span.addEventListener('click', change_visibility);
-            }
+            const toc_structure = {
+                href      : id,
+                name      : text,
+                counter   : header_number,
+                tochidden : section.hasAttribute('data-tochidden'),
+                children  : getTocFromSections(section, counters.concat([num]))
+            };
 
             // Add the new entry to the list of ToC links.
-            toc.push(li);
+            toc.push(toc_structure);
         });
 
-        // if 'toc' is not empty, toc entries have been indeed generated, so we can construct the TOC
-        if (toc.length > 0) {
-            toc.forEach((entry) => ul.append(entry));
-            toc_target.append(ul);
-        }
-
-        // This value is used when a dynamic menu is generated: it signals the caller that there
-        // _is_ a hierarchy indeed.
-        return toc.length;
+        return toc;
     };
 
-    // The top level is either the body element or, if it exists, the main element.
+    /**
+     * Generate the TOC, using the toc structure. It generates a hierarchy of `<ul>` elements, putting
+     * the (possible) into a separate `<span>`. In case of a dynamic menu, the latter get specific
+     * class names (see general description) and is target to a click even to change that class name.
+     *
+     * The function is recursive, insofar as the children ToC hierarchy leads to a recursive call to create
+     * the corresponding embedded `<ul>`.
+     *
+     * @param {HTMLElement} toc_target where to put the generated TOC
+     * @returns {Array} array of ToC structures, to be converted into HTML
+     */
+    const generate_toc = (toc_target, toc_structure) => {
+        if (toc_structure.length === 0) return;
+        const ul = document.createElement('ul');
+        toc_target.append(ul);
+        toc_structure.forEach((toc_entry) => {
+            // This is the rough structure, to be greatly refined!!!!!
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            const span = document.createElement('span');
+
+            // If the counter option is set, the number is used for a 'span'
+            if (generate_counter) {
+                span.className = 'tocnumber';
+                span.textContent = `${toc_entry.counter}.`;
+                li.append(span);
+            }
+
+            a.setAttribute('href', toc_entry.href);
+            a.textContent = toc_entry.name;
+            li.append(a);
+
+            // see if there are children; if so,
+            // a recursion takes place, but the dynamic
+            // structure is also generated
+            if (toc_entry.children.length > 0) {
+                generate_toc(li, toc_entry.children);
+                if (dynamic) {
+                    // note that if the dynamic flag is set, it implies the display of counters
+                    span.className = toc_entry.tochidden ? 'tocnumber tochidden' : 'tocnumber tocvisible';
+                    span.addEventListener('click', change_visibility);
+                }
+            }
+            ul.append(li);
+        });
+    };
+
+    // The top level to look for the headers is either the body element or, if it exists, the (first) main element.
     const body = document.querySelector('body');
     if (body === undefined) return;
     const start = body.querySelector('main') || body;
-    getTocObject(target, start, [], generate_counter);
+
+    const full_toc = getTocFromSections(start, []);
+    // console.log(JSON.stringify(full_toc, null, 4));
+    generate_toc(target, full_toc);
 }
 
 
