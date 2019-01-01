@@ -8,42 +8,46 @@
 </head>
 <body>
 	<h1>This is just a h1, it should be left as a title</h1>
-	<doc-toc dynamic>
+	<doc-toc dynamic use_sections>
 		<h2>Table of Contents</h2>
 	</doc-toc>
 	<main>
-		<h1>This is a first level section</h1>
-		<p>With some text just to fill it</p>
-		<section>
-			<h1>This is a subsection</h1>
-			<p>with some texts in the subsection...</p>
-			<section>
-				<h3>A Sub-sub-section</h3>
-				<p>Something here and here and here</p>
-				<section data-tochidden>
-					<h3>A Sub-sub-sub-section</h3>
-					<p>Something here and here and here</p>
-					<section>
-						<h3>A Sub-sub-sub-sub-section</h3>
-						<p>Something here and here and here</p>
-					</section>
-					<section>
-						<h3>Another Sub-sub-sub-sub-section</h3>
-						<p>Something here and here and here</p>
-					</section>
-				</section>
-			</section>
-			<section>
-				<h3>Another Sub-sub-section</h3>
-				<p>Something here and here and here again</p>
-			</section>
-		</section>
-		<section>
-			<h2>Just trying another 2nd level header</h2>
-			<p>bla bla bla</p>
-		</section>
-		<h1>This is another first level section</h1>
-		<p>With some more text just to have it; it should be ignored, because it is not part of a section</p>
-	</main>
+        <section>
+            <h1>This is a first level section</h1>
+            <p>With some text just to fill it</p>
+            <section>
+                <h1>This is a subsection</h1>
+                <p>with some texts in the subsection...</p>
+                <section>
+                    <h3>A Sub-sub-section</h3>
+                    <p>Something here and here and here</p>
+                    <section data-tochidden>
+                        <h3>A Sub-sub-sub-section</h3>
+                        <p>Something here and here and here</p>
+                        <section>
+                            <h3>A Sub-sub-sub-sub-section</h3>
+                            <p>Something here and here and here</p>
+                        </section>
+                        <section>
+                            <h3>Another Sub-sub-sub-sub-section</h3>
+                            <p>Something here and here and here</p>
+                        </section>
+                    </section>
+                </section>
+                <section>
+                    <h3>Another Sub-sub-section</h3>
+                    <p>Something here and here and here again</p>
+                </section>
+            </section>
+            <section>
+                <h2>Just trying another 2nd level header</h2>
+                <p>bla bla bla</p>
+            </section>
+        </section>
+        <section>
+            <h1>This is another first level section</h1>
+            <p>With some more text just to have it; it should be ignored, because it is not part of a section</p>
+        </section>
+    </main>
 </body>
 </html>
