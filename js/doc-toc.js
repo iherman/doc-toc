@@ -292,61 +292,44 @@ function generateToC(target, max_depth, id_prefix, generate_counter, dynamic, us
 }
 
 /**
- * Standard idiom to create a custom element encapsulating the ToC. The only real role of using the custom
- * element is to be a place where all the controlling attributes may go. It also takes care of adding a
- * `<nav role='doc-toc'>` element to hold the ToC itself, thereby making the result abide to the
- * requirements of DPUB ARIA.
- *
- * (In fact, the same functionality could have been implemented via a `<nav>` element with some predefined
- * `id` value and a bunch of `data-*` attributes.)
- *
- * The real work is done by calling out to the `generateToC` function, using the `<nav>` element as a target.
- *
+ * Main handler to generate the ToC. Looks for a `<nav>` element where the ToC should go, extracts
+ * the options from the `data-options` attributes, and calls out to the main entry point above,
+ * i.e., `generateToC`.
  */
-class DocToc extends HTMLElement {
-    constructor() {
-        super();
-        this._nav = undefined;
-        this._max_depth = 0;
-        this._id_prefix = 'section';
-        this._generate_counter = true;
-        this._dynamic = false;
-        this._use_sections = false;
-    }
+function handleDocToc() {
+    const nav = document.querySelector('nav[role *= "doc-toc"]');
 
-    static get observedAttributes() { return ['max_depth', 'prefix', 'suppress_counter', 'dynamic', 'use_sections']; }
+    if (nav !== undefined) {
+        let use_sections = false;
+        let dynamic = false;
+        let generate_counters = true;
+        let max_depth = 0;
+        let prefix = 'section';
 
-    /**
-     * Create the `<nav>` container, check the attributes and call out to `generateToC`. The latter is done via a call
-     * to the event listener of the `window` object, to make it sure that all the main DOM is already in place.
-     *
-     */
-    connectedCallback() {
-        if (this._nav === undefined) {
-            // a `nav` element is added as the top level element for the ToC
-            this._nav = document.createElement('nav');
-            this._nav.setAttribute('role', 'doc-toc');
-            this.append(this._nav);
-        }
-        if (this.hasAttribute('max_depth')) {
-            const n = Number(this.getAttribute('max_depth'));
-            this._max_depth = Number.isInteger(n) ? n : 0;
-        }
-        if (this.hasAttribute('prefix')) {
-            this._id_prefix = this.getAttribute('prefix');
-        }
-        this._generate_counter = !this.hasAttribute('suppress_counter');
-        if (this.hasAttribute('dynamic')) {
-            this._generate_counter = true;
-            this._dynamic = true;
-        }
-        this._use_sections = this.hasAttribute('use_sections');
-
-        // Generate the table of content structure into this element
-        window.addEventListener('load', () => {
-            generateToC(this._nav, this._max_depth, this._id_prefix,
-                        this._generate_counter, this._dynamic, this._use_sections);
+        const dataset = nav.dataset;
+        const options = dataset.options ? dataset.options.split(' ') : [];
+        options.forEach((option) => {
+            if (option === 'use_sections') {
+                use_sections = true;
+            } else if (option === 'dynamic') {
+                dynamic = true;
+            } else if (option === 'suppress_counters') {
+                generate_counters = false;
+            } else if (option.startsWith('max_depth')) {
+                try {
+                    max_depth = option.split('=')[1] * 1;
+                } catch (error) {
+                    ;
+                }
+            } else if (option.startsWith('prefix')) {
+                try {
+                    prefix = option.split('=')[1];
+                } catch (error) {
+                    ;
+                }
+            }
         });
+        generateToC(nav, max_depth, prefix, generate_counters, dynamic, use_sections);
     }
 }
-customElements.define('doc-toc', DocToc);
+window.addEventListener('load', handleDocToc);
