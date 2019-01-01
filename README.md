@@ -1,8 +1,22 @@
 # Table of Content (TOC) script
 
-Customized built-in element for the generation of a table of content (ToC). The table of content is collected from `<section>` elements with an immediate heading element (if there are several, the first one is used). Ie, the expected structure is
+Customized built-in element for the generation of a table of content (ToC). There are two ways to extract the ToC entries: either using the HTML header elements (i.e., `<h1>`, `<h2>`,…,`<h6>`, or use `<section>` element with an included header. The former is the default; the latter can be chosen by setting a specific attribute (see below).
 
-```
+## Alternatives for sectioning
+
+### Using the header elements
+
+This means simply using the hierarchy of the `<h1>`, `<h2>`,…,`<h6>` elements. If the HTML content includes a `<main>` element, then only the header included in it are used.
+
+Note that the 'top level' ToC entry is decided by the _first_ header element, regardless of whether it is a `<h1>` or a `<h2>`. Also, if a, say, `<h2>` is followed by an `<h4>`, then this is simply considered as the "next" entry in the hierarchy, i.e., no "intermediate" hierarchy will be included.
+
+The `id` is set for all headers (unless there is one, which is reused) to create the relative links. By default, the section numbers are automatically added to the header texts and the corresponding ToC links (this can be controlled, see below). Also by default, the ToC uses the maximum depth of sections; this can also be set to a lower number. Finally, individual headers can be removed from the ToC by setting their `data-notoc` attribute.
+
+### Using sections
+
+The table of content is collected from `<section>` elements with an immediate heading element (if there are several, the first one is used). Ie, the expected structure is
+
+```html
 <section>
     <h2>header 1</h2>
     …
@@ -20,11 +34,11 @@ The sections are collected from within a `<main>` element, if any, or from `<bod
 
 The `id` is set for all sections (unless there is one, which is reused) to create the relative links. By default, the section numbers are automatically added to the header texts and the corresponding ToC links (this can be controlled, see below). Also by default, the ToC uses the maximum depth of sections; this can also be set to a lower number. Finally, individual sections can be removed from the ToC hierarchy by setting their `data-notoc` attribute.
 
-## Usage
+## Usage in HTML
 
 Place the following reference to the javascript and the (custom) element into the HTML file:
 
-```
+```html
 <html>
 <head>
     …
@@ -33,22 +47,21 @@ Place the following reference to the javascript and the (custom) element into th
 </head>
 <body>
     …
-    <doc-toc>
-        Any text or HTML content here
-    </doc-toc>
+    <doc-toc></doc-toc>
     …
 </body>
 </html>
 ```
 
-A `<nav>` element is _appended_ to the custom element, with its `role` attribute set to `doc-toc`. The ToC itself is appended to this `<nav>` content in the form of a `<ul>`; hierarchical ToC entries use nested `<ul>`. 
+A `<nav>` element is added to the custom element, with its `role` attribute set to `doc-toc`. The ToC itself is added to this `<nav>` content in the form of a `<ul>`; hierarchical ToC entries use nested `<ul>`.
 
 The following attributes can be set on the `<doc-toc>` element:
 
+- `use_sections`: by default, the list of HTML header elements are used to collect the ToC. If this attribute is set, a hierarchy of section elements with headers control the ToC.
 - `prefix=value`: the prefix used for setting the `id` attribute for the sections. The full `id` is set to `value_x.y.z`, where `x.y.z` is the numbering in the ToC hierarchy. Default value is `section`.
 - `suppress_counter`: do not add the counter values to the section heading and the ToC entries. Default is to set the counter.
 - `max_depth`: the maximum depth for the ToC. If set to 0 (or negative), the full hierarchy is used; if a positive number, that sets the maximum value for the hierarchy. Default is 0.
-- `dynamic`: an extra interaction is added to the ToC entries: if the ToC entry has sub-entries, the section value part (which is always enclosed in a `<span>` element) gets an extra `tocvisible` class. Furthermore, that element also reacts on pointer click events to alternate between that class name and `tochidden`. CSS can then be used to, e.g., reveal/hide that sub-hierarchy (see `css/doc-toc.css` as an example). Default is not to add dynamic features. (Note that if this value is set, that implies the existence of the counter, i.e., the value of `suppress_counter` is ignored.)
+- `dynamic`: an extra interaction is added to the ToC entries: if the ToC entry has sub-entries, the counter value part (which is always enclosed in a `<span>` element, see below) gets an extra `tocvisible` class. Furthermore, that element also reacts on pointer click events to alternate between that class name and `tochidden`. CSS can then be used to, e.g., reveal/hide that sub-hierarchy (see `css/doc-toc.css` as an example). Default is not to add dynamic features. (Note that if this value is set, that implies the existence of the counter, i.e., the  possible  `suppress_counter` attribute is ignored.)
 
 ## Customization possibilities
 
@@ -60,9 +73,9 @@ A number of class attributes are added to the ToC entries that can be used for C
 - The counter value (if used) is always enclosed in a `<span>` element with the class set to `tocnumber`.
 - In case the dynamic features are used, the `<span>` element holding the counter value has also the class `tocvisible` (by default) or `tochidden` (as a result of user interaction).
 
-Furthermore the `<section>` elements in the original texts can use the following attributes:
+Furthermore the header, respectively the `<section>` elements, in the original HTML source can use the following attributes:
 
-- `data-notoc`: if set, that section is ignored for the purpose of a ToC
+- `data-notoc`: if set, that header/section is ignored for the purpose of a ToC
 - `data-tochidden`: if set, and the dynamic features are also used, the default for this hierarchy is to set the `tochidden` class value on the counter, instead of the default `tocvisible`.
 
-The `css/doc-toc.css` provides some simple examples for customization.
+The `css/doc-toc.css` provides examples for customization.

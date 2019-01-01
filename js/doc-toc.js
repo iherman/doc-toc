@@ -19,7 +19,7 @@
  * @param {Boolean} dynamic whether the ToC should be dynamic or not
  * @param {Boolean} use_section whether the ToC should be retrieved from the sections or directly from the headers
  */
-function getToc(target, max_depth, id_prefix, generate_counter, dynamic, use_sections) {
+function generateToC(target, max_depth, id_prefix, generate_counter, dynamic, use_sections) {
     /**
      * Event handler: switch between the 'tocvisible' and 'tochidden' classnames
      *
@@ -242,11 +242,13 @@ function getToc(target, max_depth, id_prefix, generate_counter, dynamic, use_sec
      * the corresponding embedded `<ul>`.
      *
      * @param {HTMLElement} toc_target where to put the generated TOC
-     * @returns {Array} array of ToC structures, to be converted into HTML
+     * @param {Array} array of ToC structures, to be converted into HTML
+     * @param {Integer} level level in the hierarchy, used to set a class value
      */
-    const generate_toc = (toc_target, toc_structure) => {
+    const generate_toc = (toc_target, toc_structure, level) => {
         if (toc_structure.length === 0) return;
         const ul = document.createElement('ul');
+        ul.className = `toc toclevel${level}`;
         toc_target.append(ul);
         toc_structure.forEach((toc_entry) => {
             // This is the rough structure, to be greatly refined!!!!!
@@ -263,13 +265,13 @@ function getToc(target, max_depth, id_prefix, generate_counter, dynamic, use_sec
 
             a.setAttribute('href', toc_entry.href);
             a.textContent = toc_entry.name;
+            a.className = 'tocitem';
             li.append(a);
 
-            // see if there are children; if so,
-            // a recursion takes place, but the dynamic
+            // see if there are children; if so, a recursion takes place, but the dynamic
             // structure is also generated
             if (toc_entry.children.length > 0) {
-                generate_toc(li, toc_entry.children);
+                generate_toc(li, toc_entry.children, level + 1);
                 if (dynamic) {
                     // note that if the dynamic flag is set, it implies the display of counters
                     span.className = toc_entry.tochidden ? 'tocnumber tochidden' : 'tocnumber tocvisible';
@@ -284,12 +286,23 @@ function getToc(target, max_depth, id_prefix, generate_counter, dynamic, use_sec
     const body = document.querySelector('body');
     if (body === undefined) return;
     const start = body.querySelector('main') || body;
-
     const full_toc = (use_sections ? getTocFromSections : getTocFromHeaders)(start);
     // console.log(JSON.stringify(full_toc, null, 4));
-    generate_toc(target, full_toc);
+    generate_toc(target, full_toc, 1);
 }
 
+/**
+ * Standard idiom to create a custom element encapsulating the ToC. The only real role of using the custom
+ * element is to be a place where all the controlling attributes may go. It also takes care of adding a
+ * `<nav role='doc-toc'>` element to hold the ToC itself, thereby making the result abide to the
+ * requirements of DPUB ARIA.
+ *
+ * (In fact, the same functionality could have been implemented via a `<nav>` element with some predefined
+ * `id` value and a bunch of `data-*` attributes.)
+ *
+ * The real work is done by calling out to the `generateToC` function, using the `<nav>` element as a target.
+ *
+ */
 class DocToc extends HTMLElement {
     constructor() {
         super();
@@ -303,8 +316,13 @@ class DocToc extends HTMLElement {
 
     static get observedAttributes() { return ['max_depth', 'prefix', 'suppress_counter', 'dynamic', 'use_sections']; }
 
+    /**
+     * Create the `<nav>` container, check the attributes and call out to `generateToC`. The latter is done via a call
+     * to the event listener of the `window` object, to make it sure that all the main DOM is already in place.
+     *
+     */
     connectedCallback() {
-        if (!this._nav) {
+        if (this._nav === undefined) {
             // a `nav` element is added as the top level element for the ToC
             this._nav = document.createElement('nav');
             this._nav.setAttribute('role', 'doc-toc');
@@ -325,11 +343,9 @@ class DocToc extends HTMLElement {
         this._use_sections = this.hasAttribute('use_sections');
 
         // Generate the table of content structure into this element
-        // I am not sure it is necessary to make the main processing and event handler,
-        // but it is certainly more safe...
         window.addEventListener('load', () => {
-            getToc(this._nav, this._max_depth, this._id_prefix,
-                   this._generate_counter, this._dynamic, this._use_sections);
+            generateToC(this._nav, this._max_depth, this._id_prefix,
+                        this._generate_counter, this._dynamic, this._use_sections);
         });
     }
 }
