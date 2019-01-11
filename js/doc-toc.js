@@ -221,7 +221,7 @@ function generateToC(target, max_depth, id_prefix, generate_counter, dynamic, us
                     name      : text,
                     counter   : header_number,
                     tochidden : section.hasAttribute('data-tochidden'),
-                    children  : getTocFromSections(section, counters.concat([num]))
+                    children  : one_level(section, counters.concat([num]))
                 };
 
                 // Add the new entry to the list of ToC links.
