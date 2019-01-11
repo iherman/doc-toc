@@ -16,7 +16,6 @@ nav[role='doc-toc'] ul {
 
 .tocvisible, .tochidden {
     cursor: pointer;
-    font-family: monospace;
 }
 
 .tocvisible:before {
@@ -31,7 +30,7 @@ nav[role='doc-toc'] ul {
     font-family: monospace;
 }
 
-/* Careful: the content below are two non-breakable spaces (in UTF-8)! */ 
+/* Careful: the content below are two non-breakable spaces (in UTF-8)! */
 span.tocnumber:not(.tocvisible):not(.tochidden):before {
     content: "  ";
     font-size: 110%;
