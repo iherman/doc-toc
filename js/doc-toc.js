@@ -263,7 +263,7 @@ function generateToC(target, max_depth, id_prefix, generate_counter, dynamic, us
                 li.append(span);
             }
 
-            a.setAttribute('href', toc_entry.href);
+            a.setAttribute('href', `#${toc_entry.href}`);
             a.textContent = toc_entry.name;
             a.className = 'tocitem';
             li.append(a);
